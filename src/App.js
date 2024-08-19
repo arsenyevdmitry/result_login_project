@@ -1,68 +1,39 @@
-import React, { useState } from "react"
+import * as Yup from "yup"
 
+import React from "react"
 import styles from "./App.module.css"
+import { useForm } from "react-hook-form"
+import { yupResolver } from "@hookform/resolvers/yup"
+
+const validationSchema = Yup.object().shape({
+  email: Yup.string()
+    .required("Email is required")
+    .email("Invalid email address")
+    .max(20, "Email must be less than 20 characters"),
+  password: Yup.string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters"),
+  passwordRepeat: Yup.string()
+    .required("Repeat password is required")
+    .oneOf([Yup.ref("password")], "Passwords must match"),
+})
 
 export const App = () => {
-  const [email, setEmail] = useState("")
-  const [emailError, setEmailError] = useState(null)
-  const [password, setPassword] = useState("")
-  const [passwordError, setPasswordError] = useState(null)
-  const [passwordRepeat, setPasswordRepeat] = useState("")
-  const [passwordRepeatError, setPasswordRepeatError] = useState(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(validationSchema),
+  })
 
-  const validateEmail = (value) => {
-    if (!/^[\w_@.]*$/.test(value)) {
-      return "Неверный email. Допустимые символы: буквы, цифры и нижнее подчёркивание"
-    } else if (value.length > 20) {
-      return "Неверный email. Должно быть не больше 20 символов"
-    } else if (value.length < 3) {
-      return "Неверный email. Должно быть не меньше 3 символов"
-    }
-    return null
+  const onSubmit = (data) => {
+    console.log(data)
   }
-
-  const validatePassword = (value) => {
-    if (value.length < 8) {
-      return "Пароль должен быть не менее 8 символов"
-    }
-    return null
-  }
-
-  const validatePasswordRepeat = (value) => {
-    if (value !== password) {
-      return "Пароли не совпадают"
-    }
-    return null
-  }
-
-  const handleEmailChange = (event) => {
-    const value = event.target.value
-    setEmail(value)
-    setEmailError(validateEmail(value))
-  }
-
-  const handlePasswordChange = (event) => {
-    const value = event.target.value
-    setPassword(value)
-    setPasswordError(validatePassword(value))
-  }
-
-  const handlePasswordRepeatChange = (event) => {
-    const value = event.target.value
-    setPasswordRepeat(value)
-    setPasswordRepeatError(validatePasswordRepeat(value))
-  }
-
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    console.log({ email, password, passwordRepeat })
-  }
-
-  const isFormValid = !emailError && !passwordError && !passwordRepeatError
 
   return (
     <div className={styles.app}>
-      <form onSubmit={handleSubmit} className={styles.form}>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <div className={styles.formGroup}>
           <label htmlFor="email" className={styles.label}>
             Email
@@ -70,11 +41,14 @@ export const App = () => {
           <input
             id="email"
             type="email"
-            value={email}
-            onChange={handleEmailChange}
-            className={`${styles.input} ${emailError ? styles.inputError : ""}`}
+            {...register("email")}
+            className={`${styles.input} ${
+              errors.email ? styles.inputError : ""
+            }`}
           />
-          {emailError && <div className={styles.error}>{emailError}</div>}
+          {errors.email && (
+            <div className={styles.error}>{errors.email.message}</div>
+          )}
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="password" className={styles.label}>
@@ -83,13 +57,14 @@ export const App = () => {
           <input
             id="password"
             type="password"
-            value={password}
-            onChange={handlePasswordChange}
+            {...register("password")}
             className={`${styles.input} ${
-              passwordError ? styles.inputError : ""
+              errors.password ? styles.inputError : ""
             }`}
           />
-          {passwordError && <div className={styles.error}>{passwordError}</div>}
+          {errors.password && (
+            <div className={styles.error}>{errors.password.message}</div>
+          )}
         </div>
         <div className={styles.formGroup}>
           <label htmlFor="passwordRepeat" className={styles.label}>
@@ -98,17 +73,16 @@ export const App = () => {
           <input
             id="passwordRepeat"
             type="password"
-            value={passwordRepeat}
-            onChange={handlePasswordRepeatChange}
+            {...register("passwordRepeat")}
             className={`${styles.input} ${
-              passwordRepeatError ? styles.inputError : ""
+              errors.passwordRepeat ? styles.inputError : ""
             }`}
           />
-          {passwordRepeatError && (
-            <div className={styles.error}>{passwordRepeatError}</div>
+          {errors.passwordRepeat && (
+            <div className={styles.error}>{errors.passwordRepeat.message}</div>
           )}
         </div>
-        <button type="submit" className={styles.button} disabled={!isFormValid}>
+        <button type="submit" className={styles.button}>
           Зарегистрироваться
         </button>
       </form>
