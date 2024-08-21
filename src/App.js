@@ -1,6 +1,7 @@
 import * as Yup from "yup"
 
-import React from "react"
+import React, { useRef } from "react"
+
 import styles from "./App.module.css"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -19,16 +20,20 @@ const validationSchema = Yup.object().shape({
 })
 
 export const App = () => {
+  const buttonRef = useRef(null)
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     resolver: yupResolver(validationSchema),
+    mode: "onTouched",
   })
 
   const onSubmit = (data) => {
     console.log(data)
+    buttonRef.current.focus()
   }
 
   return (
@@ -82,7 +87,12 @@ export const App = () => {
             <div className={styles.error}>{errors.passwordRepeat.message}</div>
           )}
         </div>
-        <button type="submit" className={styles.button}>
+        <button
+          type="submit"
+          className={styles.button}
+          disabled={!isValid}
+          ref={buttonRef}
+        >
           Зарегистрироваться
         </button>
       </form>
